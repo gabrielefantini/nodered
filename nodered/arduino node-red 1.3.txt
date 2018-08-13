@@ -1,0 +1,186 @@
+#include <SPI.h>
+#include <Ethernet.h>
+#include <PubSubClient.h>
+#include <DHT.h>
+#include <EmonLib.h>
+
+
+// Update these with values suitable for your network.
+byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
+//IPAddress ip(172, 16, 0, 100);
+IPAddress server(192, 168, 1, 13);
+EthernetClient ethClient;
+PubSubClient client(ethClient);
+
+EnergyMonitor emon1; //monitoraggio corrente
+
+#define DHTPIN 2    // a quale pin digitale è connesso il sensore di umidità
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+#define RELAY1 6 // pin digitali ai quali sono connessi i relè
+#define RELAY2 7
+#define RELAY3 8
+#define RELAY4 9
+
+void setup()
+{
+  Serial.begin(9600);
+  
+  Ethernet.begin(mac);  //setup parte internet
+  client.setServer(server, 1883);
+  client.setCallback(callback);
+  
+  pinMode(RELAY1, OUTPUT); //setto la modalità dei pin digitali relativi ai relè
+  pinMode(RELAY2, OUTPUT);
+  pinMode(RELAY3, OUTPUT);
+  pinMode(RELAY4, OUTPUT);
+  
+  dht.begin(); //inizializzo lettura umidità
+  
+  emon1.current(1,30);  // Voltage: input pin, calibration, phase_shift
+  
+  delay(1500);
+}
+
+void loop()
+{
+  if (!client.connected()) {
+      Serial.print("Attempting MQTT connection...");
+      // Attempt to connect
+      if (client.connect("arduinoClient")) {
+        Serial.println("connected");
+        // Once connected, publish an announcement...
+         client.subscribe("RichiediUmidita",0);
+         client.subscribe("MisuraConsumo",0);
+         client.subscribe("AttivaRele",0);
+         client.subscribe("DisattivaRele",0);
+        
+        // ... and resubscribe
+       
+      } else {
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 5 seconds");
+        // Wait 5 seconds before retrying
+       delay(5000);
+      }
+    }
+  client.loop();
+}
+
+
+
+
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  String message = "";
+  String top = String(topic);
+  for (int i=0;i<length;i++) {
+    Serial.print((char)payload[i]);
+    message += (char)payload[i];
+  }
+  Serial.println();
+ 
+ if(top == "RichiediUmidita"){
+  String umidita = RichiediUmidita();
+  int m = sizeof(umidita);
+  Serial.println(umidita);
+  char val[m];
+  strncpy(val, umidita.c_str(), m);
+  client.publish("Umidita",val);
+ }
+ 
+ if(top == "AttivaRele"){
+  int n = message.toInt();
+  String attivo = AttivaRele(n);
+  int m = sizeof(attivo);
+  char val[m];
+  strncpy(val, attivo.c_str(),m);
+  if(n==1)
+  client.publish("checkrele1",val);
+  if(n==2)
+  client.publish("checkrele2",val);
+  if(n==3)
+  client.publish("checkrele3",val);
+  if(n==4)
+  client.publish("checkrele4",val);
+  Serial.println(val);
+ }
+ 
+ if(top == "DisattivaRele"){
+  int n = message.toInt();
+  String disattivo = DisattivaRele(n);
+  int m = sizeof(disattivo);
+  char val[m];
+  strncpy(val, disattivo.c_str(), m);
+  if(n==1)
+  client.publish("checkrele1",val);
+  if(n==2)
+  client.publish("checkrele2",val);
+  if(n==3)
+  client.publish("checkrele3",val);
+  if(n==4)
+  client.publish("checkrele4",val);
+  Serial.println(val);
+ }
+ 
+ if(top == "MisuraConsumo"){
+  String consumo = MisuraConsumo();
+  Serial.println(consumo);
+  int m = sizeof(consumo);
+  char val[m];
+  strncpy(val, consumo.c_str(), m);
+  client.publish("Consumo",val);
+ }
+}
+
+
+String RichiediUmidita() {
+  float h = dht.readHumidity();
+  String ret = String(h);
+  return ret;
+}
+
+String AttivaRele(int numerorele) {
+  if (numerorele == 1)
+    digitalWrite(RELAY1, HIGH);
+  if (numerorele == 2)
+    digitalWrite(RELAY2, HIGH);
+  if (numerorele == 3)
+    digitalWrite(RELAY3, HIGH);
+  if (numerorele == 4)
+    digitalWrite(RELAY4, HIGH);
+  String ret = "on";
+  return ret;
+}
+String DisattivaRele(int numerorele) {
+  if (numerorele == 1)
+    digitalWrite(RELAY1, LOW);
+  if (numerorele == 2)
+    digitalWrite(RELAY2, LOW);
+  if (numerorele == 3)
+    digitalWrite(RELAY3, LOW);
+  if (numerorele == 4)
+    digitalWrite(RELAY4, LOW);
+  String ret = "off";
+  return ret;
+}
+String MisuraConsumo() {
+  double Irms = emon1.calcIrms(1480);
+  //Mostra il valore della Corrente
+  Serial.print("Corrente : ");
+  Serial.print(Irms); // Irm
+   //Calcola e mostra i valori della Potenza
+  Serial.print(" Potenza : ");
+  Serial.println(Irms*230.0);//Scrivo sul monitor seriale Corrente*Tensione=Potenza
+  //String ret ="";
+  int ret = Irms*230.0;
+   return String(ret);
+}
+
+String FineLavaggio() {
+}

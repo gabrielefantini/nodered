@@ -1,0 +1,95 @@
+#include <SPI.h>
+#include <WiFi101.h>
+
+char ssid[] = "Direct_ano"; //  your network SSID (name)
+char pass[] = "bellagabrielebellagabriele";    // your network password (use for WPA, or use as key for WEP)
+int keyIndex = 0;            // your network key Index number (needed only for WEP)
+
+int status = WL_IDLE_STATUS;
+
+
+void setup() {
+  //Initialize serial and wait for port to open:
+  Serial.begin(9600);
+  
+  // attempt to connect to Wifi network:
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    status = WiFi.begin(ssid, pass);
+
+    // wait 10 seconds for connection:
+    delay(10000);
+  }
+  Serial.println("Connected to wifi");
+  printWifiStatus();
+  
+  Serial.println(WiFi.localIP());
+    delay(500);
+  
+}
+
+void loop() {
+  const uint16_t port = 8888;          // port to use
+    const char * host = "192.168.1.10"; // address of server
+    String msg;
+
+    // Use WiFiClient class to create TCP connections
+    WiFiClient client;
+
+    if (!client.connect(host, port)) {
+        Serial.println("connection failed");
+        Serial.println("wait 5 sec...");
+        delay(5000);
+        return;
+    }
+   
+    // Send a random number to the TCP server
+    msg = String(random(0,100));
+    client.print(msg);
+    Serial.print("Sent : ");
+    Serial.println(msg);
+    client.stop();    
+    delay(5000);
+}
+
+
+void printWifiStatus() {
+  // print the SSID of the network you're attached to:
+  Serial.print("SSID: ");
+  Serial.println(WiFi.SSID());
+
+  // print your WiFi shield's IP address:
+  IPAddress ip = WiFi.localIP();
+  Serial.print("IP Address: ");
+  Serial.println(ip);
+
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  Serial.print("signal strength (RSSI):");
+  Serial.print(rssi);
+  Serial.println(" dBm");
+}
+
+
+//funzioni arduino 
+
+int RichiediTemperatura(){
+}
+
+int RichiediUmidita(){
+}
+
+int AttivaRele(){
+}
+
+int MisuraConsumo(){
+}
+
+int FineLavaggio(){
+}
+
+
+
+

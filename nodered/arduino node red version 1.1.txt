@@ -1,0 +1,152 @@
+#include <SPI.h>
+#include <WiFi101.h>
+#include <DHT.h>
+
+#define DHTPIN 2    // what digital pin we're connected to
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+#define RELAY2 6
+#define RELAY3 7
+
+//#define FINELAVAGGIO 10
+//#define CONFERMA 9
+
+char ssid[] = "Direct_ano"; //  your network SSID (name)
+char pass[] = "bellagabrielebellagabriele";    // your network password (use for WPA, or use as key for WEP)
+int keyIndex = 0;            // your network key Index number (needed only for WEP)
+
+int status = WL_IDLE_STATUS;
+
+WiFiServer server(80);
+
+void setup() {
+  //Initialize serial and wait for port to open:
+  Serial.begin(9600);
+
+  // attempt to connect to Wifi network:
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    status = WiFi.begin(ssid, pass);
+
+    // wait 10 seconds for connection:
+    delay(10000);
+  }
+  server.begin();
+  Serial.println("Connected to wifi");
+  printWifiStatus();
+
+  pinMode(RELAY2, OUTPUT);
+  pinMode(RELAY3, OUTPUT);
+  dht.begin();
+
+  //pinMode(FINELAVAGGIO, INPUT);
+  //pinMode(CONFERMA, OUTPUT);
+
+}
+
+void loop() {
+
+  String msgg = "";
+
+  WiFiClient client = server.available();
+   if(client){
+    Serial.println("new client");
+    
+    boolean currentLineIsBlank = true;
+    
+      while (client.connected()) {
+        if (client.available()) {
+
+          char msg = client.read();
+                        msgg += msg;
+                        int value = msgg.toInt();
+                        Serial.println(msg);
+                
+                        if (value == 0) {
+                          Serial.println("0 ricevuto");
+                          client.print(RichiediTemperatura());
+                          client.print("\n");
+                        
+                        }
+                        if (value == 1) {
+                          client.print(String(RichiediUmidita()));
+                        }
+                        if (value == 2) { //attiva rele 1
+                          client.print(String(AttivaRele(1)));
+                        }
+                        if (value == 3) { //attiva rele 2
+                          client.print(String(AttivaRele(2)));
+                        }
+                        if (value == 4) { //disattiva rele 1
+                          client.print(String(DisattivaRele(1)));
+                        }
+                        if (value == 5) { //disattiva rele 2
+                          client.print(String(DisattivaRele(2)));
+                        }
+                        else 
+                        client.stop();
+                        Serial.println("client disonnected");
+                        
+      }
+     }
+   }
+
+}//fine loop
+
+
+
+//funzioni wifi
+void printWifiStatus() {
+  // print the SSID of the network you're attached to:
+  Serial.print("SSID: ");
+  Serial.println(WiFi.SSID());
+
+  // print your WiFi shield's IP address:
+  IPAddress ip = WiFi.localIP();
+  Serial.print("IP Address: ");
+  Serial.println(ip);
+
+  // print the received signal strength:
+  long rssi = WiFi.RSSI();
+  Serial.print("signal strength (RSSI):");
+  Serial.print(rssi);
+  Serial.println(" dBm");
+}
+
+
+//funzioni arduino
+
+int RichiediTemperatura() {
+  int t = dht.readTemperature();
+  return t;
+}
+
+float RichiediUmidita() {
+  float h = dht.readHumidity();
+  return h;
+}
+
+int AttivaRele(int numerorele) {
+  if (numerorele == 1)
+    digitalWrite(RELAY2, HIGH);
+  if (numerorele == 2)
+    digitalWrite(RELAY3, HIGH);
+  return 1;
+}
+int DisattivaRele(int numerorele) {
+  if (numerorele == 1)
+    digitalWrite(RELAY2, LOW);
+  if (numerorele == 2)
+    digitalWrite(RELAY3, LOW);
+  return 1;
+}
+
+int MisuraConsumo() {
+}
+
+int FineLavaggio() {
+}
+
