@@ -7,11 +7,11 @@
 
 // Update these with values suitable for your network.
 byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
-  char ssid[] = SECRET_SSID;        // your network SSID (name)
-  char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
+  char ssid[] = "service-AP";        // your network SSID (name)
+  char pass[] = "Dariopapa";    // your network password (use for WPA, or use as key for WEP)
   int keyIndex = 0;
-IPAddress ip(172, 16, 0, 100);
-IPAddress server(10, 10, 10, 21);
+IPAddress ip(192, 168, 1, 247);
+IPAddress server(192, 168, 1, 245);
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 
