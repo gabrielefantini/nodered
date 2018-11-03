@@ -2,27 +2,38 @@
 #include <WiFi101.h>
 #include <PubSubClient.h>
 #include <DHT.h>
-#include <EmonLib.h>
+
 
 
 // Update these with values suitable for your network.
 byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
-  char ssid[] = "service-AP";        // your network SSID (name)
-  char pass[] = "Dariopapa";    // your network password (use for WPA, or use as key for WEP)
+  char ssid[] = "Rete-Test";        // your network SSID (name)
+  char pass[] = "Sofare17";    // your network password (use for WPA, or use as key for WEP)
   int keyIndex = 0;
-IPAddress ip(192, 168, 1, 247);
-IPAddress server(192, 168, 1, 245);
+  int status = WL_IDLE_STATUS;
+IPAddress ip(192, 168, 9, 50);
+IPAddress server(192, 168, 9, 47);
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 
-#define BUTTON 37 
+#define BUTTON1 5 
 int btnState = 1;
 
 void setup()
 {
   Serial.begin(9600);
   
-  WiFi.begin(mac);  //setup parte internet
+  WiFi.config(ip); 
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    status = WiFi.begin(ssid, pass);
+    
+    delay(1000);
+  }
+  
+  Serial.println("Connected to wifi");
   client.setServer(server, 1883);
   client.setCallback(callback);
 
@@ -36,8 +47,9 @@ void loop()
   if (!client.connected()) {
       Serial.print("Attempting MQTT connection...");
       // Attempt to connect
-      if (client.connect("arduinoClient")) {
+      if (client.connect("arduinoClient1")) {
         Serial.println("connected");
+        
       } else {
         Serial.print("failed, rc=");
         Serial.print(client.state());
@@ -52,8 +64,9 @@ void loop()
           btnState = 1;
          }
     if(digitalRead(BUTTON1)==LOW && btnState == 1){
-      btnState = 0;
+      Serial.println("Button off");
       DisattivaRele(1);
+      btnState = 0;
     }
    client.loop();
 }
@@ -75,47 +88,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   Serial.println();
 }
-
-String AttivaRele(int numerorele) {
-  if (numerorele == 1)
-    digitalWrite(RELAY1, LOW);
-  if (numerorele == 2)
-    digitalWrite(RELAY2, LOW);
-  if (numerorele == 3)
-    digitalWrite(RELAY3, LOW);
-  if (numerorele == 4)
-    digitalWrite(RELAY4, LOW);
-  String ret = "on";
-  return ret;
-   
-    int m = sizeof(ret);
-    char val[m];
-    strncpy(val, attivo.c_str(),m);
-  
-    if(numerorele ==1)
-     client.publish("checkrele1",val);
-    if(numerorele ==2)
-      client.publish("setrele2",val);
-    if(numerorele ==3)
-      client.publish("setrele3",val);
-    if(numerorele ==4)
-      client.publish("setrele4",val);
-}
-String DisattivaRele(int numerorele) {
-  if (numerorele == 1)
-    digitalWrite(RELAY1, HIGH);
-  if (numerorele == 2)
-    digitalWrite(RELAY2, HIGH);
-  if (numerorele == 3)
-    digitalWrite(RELAY3, HIGH);
-  if (numerorele == 4)
-    digitalWrite(RELAY4, HIGH);
-  String ret = "off";
-  return ret;
-    
-    int m = sizeof(ret);
-    char val[m];
-    strncpy(val, attivo.c_str(),m);
+void AttivaRele(int numerorele) {
+    char val[]="on";
   
     if(numerorele ==1)
      client.publish("setrele1",val);
@@ -125,4 +99,19 @@ String DisattivaRele(int numerorele) {
       client.publish("setrele3",val);
     if(numerorele ==4)
       client.publish("setrele4",val);
+    
+}
+void DisattivaRele(int numerorele) {
+
+    char val[]="off";
+  
+    if(numerorele ==1)
+     client.publish("setrele1",val);
+    if(numerorele ==2)
+      client.publish("setrele2",val);
+    if(numerorele ==3)
+      client.publish("setrele3",val);
+    if(numerorele ==4)
+      client.publish("setrele4",val);
+
 }
