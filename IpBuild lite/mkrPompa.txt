@@ -2,16 +2,18 @@
 #include <WiFi101.h>
 #include <PubSubClient.h>
 #include <DHT.h>
-#include <EmonLib.h>
+
 
 
 // Update these with values suitable for your network.
 byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
-  char ssid[] = "service-AP";        // your network SSID (name)
-  char pass[] = "Dariopapa";    // your network password (use for WPA, or use as key for WEP)
+  char ssid[] = "Rete-Test";        // your network SSID (name)
+  char pass[] = "Sofare17";    // your network password (use for WPA, or use as key for WEP)
   int keyIndex = 0;
-IPAddress ip(192, 168, 1, 246);
-IPAddress server(192, 168, 1, 245);
+  int status = WL_IDLE_STATUS;
+
+IPAddress server(192, 168, 9, 47);
+IPAddress ip(192,168,9,246);
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 
@@ -22,9 +24,19 @@ PubSubClient client(wifiClient);
 
 void setup()
 {
+  WiFi.config(ip); 
+
   Serial.begin(9600);
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    status = WiFi.begin(ssid, pass);
+    
+    delay(1000);
+  }
+  Serial.println("Connected to wifi");
   
-  WiFi.begin(mac);  //setup parte internet
   client.setServer(server, 1883);
   client.setCallback(callback);
   
