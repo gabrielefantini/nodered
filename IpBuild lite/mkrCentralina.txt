@@ -11,8 +11,9 @@ byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
   char pass[] = "Sofare17";    // your network password (use for WPA, or use as key for WEP)
   int keyIndex = 0;
   int status = WL_IDLE_STATUS;
-IPAddress ip(192, 168, 9, 50);
-IPAddress server(192, 168, 9, 47);
+
+IPAddress server(192, 168, 1, 245);
+IPAddress ip(192, 168, 1, 247);
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 
@@ -102,7 +103,7 @@ void AttivaRele(int numerorele) {
     
 }
 void DisattivaRele(int numerorele) {
-
+		
     char val[]="off";
   
     if(numerorele ==1)
