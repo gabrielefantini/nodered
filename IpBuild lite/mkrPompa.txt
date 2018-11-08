@@ -109,7 +109,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
   
     if(n==1)
     client.publish("checkrele1",val);
+    if(n==2)
+    client.publish("checkrele2",val);
     Serial.println(val);
+
    }
    
    if(top == "DisattivaRele"){
@@ -120,6 +123,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     strncpy(val, disattivo.c_str(), m);
     if(n==1)
     client.publish("checkrele1",val);
+    if(n==2)
+    client.publish("checkrele2",val);
     Serial.println(val);
    }
    
