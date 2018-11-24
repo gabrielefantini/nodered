@@ -50,13 +50,16 @@ void loop()
       // Attempt to connect
       if (client.connect("arduinoClient1")) {
         Serial.println("connected");
+        client.subscribe("RSSI",0);
         
       } else {
         Serial.print("failed, rc=");
         Serial.print(client.state());
         Serial.println(" try again in 5 seconds");
+        Serial.println("Scanning available networks...");
+        listNetworks();
         // Wait 5 seconds before retrying
-       delay(5000);
+        delay(5000);
       }
     }
     if(digitalRead(BUTTON1)== HIGH && btnState == 0){
@@ -70,8 +73,6 @@ void loop()
       btnState = 0;
     }
    client.loop();
-   Serial.println("Scanning available networks...");
-   listNetworks();
 }
 
 
@@ -90,6 +91,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
     message += (char)payload[i];
   }
   Serial.println();
+  if(top == "RSSI"){
+    String messaggio =String(WiFi.RSSI());
+    int m = sizeof(messaggio);
+    char val[m];
+    strncpy(val, messaggio.c_str(), m);
+    client.publish("wifiStrengthCentralina",val);
+    Serial.println(val);
+   }
 }
 void AttivaRele(int numerorele) {
     char val[]="on";
